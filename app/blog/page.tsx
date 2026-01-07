@@ -11,7 +11,7 @@ interface Post {
   user_id: number
 }
 
-export default function HomePage() {
+export default function BlogPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -30,36 +30,52 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-background p-8 font-serif text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="mb-12 flex justify-between items-center max-w-3xl mx-auto">
-        <h1 className="text-4xl font-sans font-extrabold tracking-tight">My Blog</h1>
-        <nav className="flex gap-6 text-link font-medium">
-        </nav>
+      <header className="border-b border-cardBorder">
+        <div className="mx-auto max-w-4xl px-6 py-12">
+          <h1 className="font-sans text-4xl md:text-5xl font-bold tracking-tight mb-3">
+            Blog
+          </h1>
+          <p className="text-secondary text-lg max-w-2xl">
+            Writing about ideas, experiments, and things I’m learning along the way.
+          </p>
+        </div>
       </header>
 
-      {/* Main content */}
-      <main className="max-w-3xl mx-auto">
+      {/* Content */}
+      <main className="mx-auto max-w-4xl px-6 py-16">
         {loading ? (
-          <p className="text-secondary">Loading posts...</p>
+          <p className="text-secondary text-center">Loading posts…</p>
         ) : posts.length === 0 ? (
-          <p className="text-secondary">No posts yet.</p>
+          <p className="text-secondary text-center">No posts yet.</p>
         ) : (
-          <ul className="space-y-8">
-            {posts.map(post => (
-              <li
-                key={post.id}
-                className="p-6 rounded-xl bg-card border border-cardBorder shadow-sm hover:shadow-md transition-shadow duration-300"
-              >
-                <Link
-                  href={`/blog/post/${post.id}`}
-                  className="text-2xl font-sans text-foreground hover:text-link transition-colors"
-                >
-                  {post.title}
+          <ul className="space-y-14">
+            {posts.map((post) => (
+              <li key={post.id} className="group">
+                <Link href={`/blog/post/${post.id}`}>
+                  <h2
+                    className="font-sans text-2xl md:text-3xl font-semibold mb-3
+                      group-hover:text-link transition-colors"
+                  >
+                    {post.title}
+                  </h2>
                 </Link>
-                <p className="text-secondary mt-3 line-clamp-3 leading-relaxed text-base">
+
+                <p className="text-secondary leading-relaxed line-clamp-3 max-w-3xl">
                   {post.body}
                 </p>
+
+                <div className="mt-4">
+                  <Link
+                    href={`/blog/post/${post.id}`}
+                    className="text-sm font-medium text-link hover:underline"
+                  >
+                    Read article →
+                  </Link>
+                </div>
+
+                <div className="mt-10 border-b border-cardBorder" />
               </li>
             ))}
           </ul>
