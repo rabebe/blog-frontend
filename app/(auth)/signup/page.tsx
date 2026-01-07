@@ -16,17 +16,25 @@ export default function SignupPage() {
     setError(null)
 
     try {
-      await signup( username, email, password )
+      await signup(username, email, password)
+      alert("Account created successfully!")
       router.push("/login") // redirect to login after signup
     } catch (err) {
       console.error("Signup failed", err)
-      setError("Unable to create account. Please check your info.")
+
+      // Only use `instanceof Error` to safely get a message
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("Unable to create account. Please check your info.")
+      }
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="auth-form">
-      {error && <p className="text-red-600">{error}</p>}
+      {error && <p className="text-red-600 mb-2">{error}</p>}
+
       <input
         type="text"
         placeholder="Username"
@@ -34,6 +42,7 @@ export default function SignupPage() {
         onChange={(e) => setUsername(e.target.value)}
         required
       />
+
       <input
         type="email"
         placeholder="Email"
@@ -41,6 +50,7 @@ export default function SignupPage() {
         onChange={(e) => setEmail(e.target.value)}
         required
       />
+
       <input
         type="password"
         placeholder="Password"
@@ -48,6 +58,7 @@ export default function SignupPage() {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
+
       <button type="submit">Sign Up</button>
     </form>
   )
