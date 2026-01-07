@@ -43,8 +43,8 @@ export async function signup(
     localStorage.setItem("token", data.token);
 
     const userToStore: StoredUser = {
-      username: data.user.username,
-      role: data.user.is_admin || data.user.admin ? "admin" : "user",
+      username: data.username,
+      role: "user",
     };
 
     localStorage.setItem("user", JSON.stringify(userToStore));
