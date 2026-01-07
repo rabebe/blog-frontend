@@ -21,10 +21,11 @@ export default function Navbar() {
             <Link href="/login" className="text-gray-600 hover:text-blue-600">Login</Link>
             <Link
               href="/signup"
-              className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700"
+              className="btn bg-black text-white px-4 py-2 rounded-full hover:bg-gray-900 transition"
             >
               Sign Up
             </Link>
+
           </>
         ) : (
           <>
