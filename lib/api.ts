@@ -1,18 +1,18 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL!
 
+// Type from your Rails API responses
 interface ApiErrorResponse {
   errors?: string[]
   error?: string
 }
 
-export async function apiFetch(
-  path: string,
-  options: RequestInit = {}
-) {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null
+// Custom error type for runtime usage
+export interface ApiError extends Error {
+  type?: "email_verification" | "unauthorized" | "forbidden"
+}
+
+export async function apiFetch(path: string, options: RequestInit = {}) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -24,21 +24,26 @@ export async function apiFetch(
     ...options,
     headers,
   })
-  
-  // 1. Handle Authentication failures
+
+  // Handle authentication failures
   if (res.status === 401 || res.status === 403) {
+    const error: ApiError = new Error(
+      res.status === 401
+        ? "Unauthorized: Please log in"
+        : "Forbidden: You do not have access"
+    )
+    error.type = res.status === 401 ? "unauthorized" : "forbidden"
+
     if (typeof window !== "undefined") {
-      // Clear the session because the token is dead
       localStorage.removeItem("token")
       localStorage.removeItem("user")
-      
-      // Force a redirect to login
-      window.location.href = "/login?error=session_expired"
+      window.dispatchEvent(new Event("authChange"))
     }
-    return
+
+    throw error
   }
 
-  // 2. Handle other errors, including Rails validation errors
+  // Handle other errors
   if (!res.ok) {
     let data: ApiErrorResponse = {}
     try {
@@ -50,7 +55,15 @@ export async function apiFetch(
       if (Array.isArray(data.errors)) {
         throw new Error(data.errors.join(", "))
       }
-      // Generic error
+
+      // Email not verified special case
+      if (data.error?.toLowerCase().includes("not verified")) {
+        const error: ApiError = new Error(data.error)
+        error.type = "email_verification"
+        throw error
+      }
+
+      // Generic API error
       if (data.error) {
         throw new Error(data.error)
       }
@@ -59,9 +72,8 @@ export async function apiFetch(
     throw new Error("API error")
   }
 
-  // 3. Handle empty responses (204 No Content)
+  // Handle empty responses (204 No Content)
   if (res.status === 204) return {}
 
   return res.json()
 }
-
