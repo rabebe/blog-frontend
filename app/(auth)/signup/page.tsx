@@ -1,6 +1,6 @@
 'use client'
 
-import { signup } from "@/lib/auth"
+import { signup, StoredUser } from "@/lib/auth"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -9,17 +9,41 @@ export default function SignupPage() {
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [message, setMessage] = useState<string | null>(null) // for info messages
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
+    setMessage(null)
     setLoading(true)
 
     try {
-      await signup(username, email, password)
-      router.push("/login")
+      const result = await signup(username, email, password)
+
+      if ("emailNotVerified" in result && result.emailNotVerified) {
+        setMessage(
+          result.message ||
+            "Account created! Please check your email to verify your account."
+        )
+      } else if ("token" in result) {
+        // store user locally
+        const userToStore: StoredUser = {
+          username: result.username,
+          role: "user",
+          emailVerified: false, // new signup is unverified
+        }
+
+        localStorage.setItem("user", JSON.stringify(userToStore))
+        localStorage.setItem("token", result.token)
+        localStorage.setItem("loginDate", Date.now().toString())
+
+        window.dispatchEvent(new Event("authChange"))
+
+        // redirect to login after signup
+        router.push("/login")
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message)
@@ -37,13 +61,17 @@ export default function SignupPage() {
         <h1 className="text-2xl font-semibold text-gray-900 mb-2">
           Create an account
         </h1>
-        <p className="text-sm text-gray-500 mb-6">
-          Sign up to get started
-        </p>
+        <p className="text-sm text-gray-500 mb-6">Sign up to get started</p>
 
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">
             {error}
+          </div>
+        )}
+
+        {message && (
+          <div className="mb-4 rounded-lg bg-green-50 border border-green-200 px-4 py-2 text-sm text-green-700">
+            {message}
           </div>
         )}
 
