@@ -1,68 +1,96 @@
 import { apiFetch } from "./api";
 
-type StoredUser = {
-  username: string;
-  role: "admin" | "user";
-};
+// Export StoredUser so TS can see it in pages
+export type StoredUser = {
+  username: string
+  role: "admin" | "user"
+  emailVerified: boolean
+}
 
-export async function login(email: string, password: string) {
-  const data = await apiFetch("/login", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
+export type LoginResult =
+  | ({ token: string } & StoredUser) // success
+  | { emailNotVerified: true; message?: string } // email not verified
 
-  if (data && data.token) {
-    localStorage.setItem("token", data.token);
+export type SignupResponse =
+  | ({ token: string } & StoredUser)
+  | { emailNotVerified: true; message?: string }
 
-    const userToStore: StoredUser = {
-      username: data.username,
-      role: data.is_admin || data.admin ? "admin" : "user",
-    };
+export async function login(email: string, password: string): Promise<LoginResult> {
+  try {
+    const data = await apiFetch("/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    })
 
-    localStorage.setItem("user", JSON.stringify(userToStore));
-    localStorage.setItem("loginDate", Date.now().toString());
+    if (data && data.token) {
+      const user: StoredUser = {
+        username: data.username,
+        role: data.is_admin || data.admin ? "admin" : "user",
+        emailVerified: data.email_verified ?? false,
+      }
 
-    // notify app of auth change
-    window.dispatchEvent(new Event("authChange"));
+      localStorage.setItem("token", data.token)
+      localStorage.setItem("user", JSON.stringify(user))
+      localStorage.setItem("loginDate", Date.now().toString())
+      window.dispatchEvent(new Event("authChange"))
+
+      return { ...user, token: data.token }
+    }
+
+    throw new Error("Invalid login response")
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("not verified")) {
+      return { emailNotVerified: true, message: err.message }
+    }
+    throw err
   }
-
-  return data;
 }
 
 export async function signup(
   username: string,
   email: string,
   password: string
-) {
-  const data = await apiFetch("/signup", {
-    method: "POST",
-    body: JSON.stringify({ user: { username, email, password } }),
-  });
+): Promise<SignupResponse> {
+  try {
+    const data = await apiFetch("/signup", {
+      method: "POST",
+      body: JSON.stringify({ user: { username, email, password } }),
+    })
 
-  if (data && data.token) {
-    localStorage.setItem("token", data.token);
+    // If backend says email not verified
+    if (data && "emailNotVerified" in data && data.emailNotVerified) {
+      return data
+    }
 
-    const userToStore: StoredUser = {
-      username: data.username,
-      role: "user",
-    };
+    // If backend sends a token (e.g., auto-login)
+    if (data && data.token) {
+      const user: StoredUser = {
+        username: data.username,
+        role: "user",
+        emailVerified: data.email_verified ?? false,
+      }
 
-    localStorage.setItem("user", JSON.stringify(userToStore));
-    localStorage.setItem("loginDate", Date.now().toString());
+      localStorage.setItem("token", data.token)
+      localStorage.setItem("user", JSON.stringify(user))
+      localStorage.setItem("loginDate", Date.now().toString())
+      window.dispatchEvent(new Event("authChange"))
 
-    // notify app of auth change
-    window.dispatchEvent(new Event("authChange"));
+      return { ...user, token: data.token }
+    }
+
+    throw new Error("Invalid signup response")
+  } catch (err) {
+    // Optional: catch backend errors about not verified
+    if (err instanceof Error && err.message.includes("not verified")) {
+      return { emailNotVerified: true, message: err.message }
+    }
+    throw err
   }
-
-  return data;
 }
 
 export function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  localStorage.removeItem("loginDate");
-
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("authChange"));
-  }
+  localStorage.removeItem("token")
+  localStorage.removeItem("user")
+  localStorage.removeItem("loginDate")
+  window.dispatchEvent(new Event("authChange"))
 }
