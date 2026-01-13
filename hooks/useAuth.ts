@@ -1,55 +1,44 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { logout as doLogout } from "../lib/auth" // Adjust path if needed
+import { useState, useEffect, useCallback } from "react"
+import { logout as doLogout } from "../lib/auth"
 
-// User type
 export type User = {
   username: string
   role: "admin" | "user"
+  emailVerified?: boolean
 }
 
 export function useAuth() {
-  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [hydrated, setHydrated] = useState(false)
 
-  // Logout function
-  const logout = () => {
-    doLogout()
-    setUser(null)
-    router.push("/login")
-  }
-
-  // Computed admin flag
-  const isAdmin = user?.role === "admin"
-
-  // Hydrate user from localStorage and listen for auth changes
-  useEffect(() => {
+  const hydrateUser = useCallback(() => {
     if (typeof window === "undefined") return
 
-    const hydrateUser = () => {
-      const raw = localStorage.getItem("user")
-      if (raw) {
-        try {
-          setUser(JSON.parse(raw))
-        } catch {
-          setUser(null)
-        }
-      } else {
-        setUser(null)
-      }
+    const raw = localStorage.getItem("user")
+    const storedUser: User | null = raw ? JSON.parse(raw) : null
+
+    // Defer state update to avoid synchronous setState in effect
+    setTimeout(() => {
+      setUser(storedUser)
       setHydrated(true)
-    }
+    }, 0)
+  }, [])
 
-    // call asynchronously to satisfy ESLint
-    setTimeout(hydrateUser, 0)
+  const logout = useCallback(() => {
+    doLogout()
+    setUser(null)
+    window.dispatchEvent(new Event("authChange"))
+  }, [])
 
-    // Listen for login/logout events
+  useEffect(() => {
+    hydrateUser()
     window.addEventListener("authChange", hydrateUser)
     return () => window.removeEventListener("authChange", hydrateUser)
-  }, [])
+  }, [hydrateUser])
+
+  const isAdmin = user?.role === "admin"
 
   return { user, hydrated, isAdmin, logout }
 }
