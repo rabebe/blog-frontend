@@ -1,59 +1,51 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { apiFetch } from "@/lib/api"
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 
-type Status = "loading" | "success" | "error"
+function VerifyContent() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+  const router = useRouter();
 
-export default function VerifyEmailPage() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const token = searchParams.get("token")
-
-  const [status, setStatus] = useState<Status>(token ? "loading" : "error")
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    token ? "loading" : "error"
+  );
   const [message, setMessage] = useState(
-    token
-      ? "Verifying your email…"
-      : "Verification token is missing or invalid."
-  )
+    token ? "Verifying your email…" : "Verification token is missing or invalid."
+  );
 
   useEffect(() => {
-    if (!token) return
+    if (!token) return;
 
-    let active = true
+    let active = true;
 
     const verify = async () => {
       try {
-        // Use GET request for Rails route
-        await apiFetch(`/verify-email?token=${encodeURIComponent(token)}`)
+        await apiFetch(`/verify-email?token=${encodeURIComponent(token)}`);
+        if (!active) return;
 
-        if (!active) return
+        setStatus("success");
+        setMessage("Your email has been verified! Redirecting to login...");
 
-        setStatus("success")
-        setMessage("Your email has been verified! Please log in.")
-
-        setTimeout(() => {
-          router.push("/login")
-        }, 2000)
+        setTimeout(() => router.push("/login"), 2000);
       } catch (err: unknown) {
-        if (!active) return
+        if (!active) return;
 
-        setStatus("error")
-        setMessage(
-          err instanceof Error
-            ? err.message
-            : "Verification failed. The link may be expired."
-        )
+        setStatus("error");
+        const errorMessage =
+          err instanceof Error ? err.message : "Verification failed";
+        setMessage(errorMessage);
       }
-    }
+    };
 
-    verify()
+    verify();
 
     return () => {
-      active = false
-    }
-  }, [token, router])
+      active = false;
+    };
+  }, [token, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -83,5 +75,13 @@ export default function VerifyEmailPage() {
         )}
       </div>
     </div>
-  )
+  );
+}
+
+export default function VerifyPageWrapper() {
+  return (
+    <Suspense fallback={<p className="text-center py-8">Loading verification...</p>}>
+      <VerifyContent />
+    </Suspense>
+  );
 }
