@@ -1,97 +1,114 @@
-**Blog Frontend**
-=================
+# Blog Frontend
 
 The **Blog Frontend** is a Next.js/React application for managing and viewing blog posts. It integrates with **Blog Backend API** to create, read, update, and delete posts, and includes **email verification** for secure user registration.
+Blog Backend: https://github.com/rabebe/blog-api
 
-* * * * *
+---
 
-**Features**
-------------
+## Overview
 
--   View blog posts in a clean, user-friendly layout
+Users can:
 
--   Allow Admin Users to create, edit, and delete blog posts (requires authentication)
+- View all blog posts
+- View approved comments
+- Submit new comments (authenticated users)
+- Admins can moderate pending comments (approve/reject)
+- Admin-only post creation, editing, and deletion
+- Verify email addresses for account security
 
--   Allow Admin to moderate and approve comments before they are posted
+---
 
--   Allow authenticated users to comment and like posts
+## Key Features
 
--   Email verification for new user accounts
+- Clean, responsive UI for desktop and mobile
+- Public comment list per post
+- Admin comment queue for moderation
+- Email verification for new users
+- Integration with backend API (Fetch API)
+- Error handling and loading indicators
 
--   Rich-text support for blog posts
+---
 
--   Responsive design for desktop and mobile
+## Tech Stack
 
--   Error handling and loading indicators for better UX
+- **Framework:** Next.js (React)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Data Fetching:** Fetch API
+- **Auth Handling:** JWT via HTTP-only cookies
+- **Deployment:** Vercel
 
--   Integration with the backend API using the **Fetch API**
+---
 
-* * * * *
+## System Architecture
 
-**Tech Stack**
---------------
+### Flowchart
+```mermaid
+flowchart LR
+    U[User Browser] --> FE[Blog Frontend]
+    FE -->|HTTP + JWT| API[Blog API]
+    API --> DB[(PostgreSQL)]
+    API --> EMAIL[Email Service]
+```
 
--   **Next.js** (React framework)
+### Comments Flow
+```mermaid
+flowchart TD
+    User --> FE[Frontend]
+    FE -->|POST / GET| API[Blog API]
+    API --> DB[(PostgreSQL)]
+    API --> FE[Approved Comments / Queue]
+```
 
--   **TypeScript** for type safety
+---
 
--   **Tailwind CSS** for styling
+## Project Structure
+```
+src/
+├── app/
+│   ├── page.tsx
+│   ├── verify-email/
+│   └── layout.tsx
+├── components/
+│   ├── PostCard.tsx
+│   ├── PostForm.tsx
+│   ├── CommentList.tsx      # Displays approved comments
+│   └── AdminCommentList.tsx # Admin moderation queue
+├── lib/
+│   └── api.ts
+├── styles/
+│   └── globals.css
+```
 
--   **Fetch API** for all backend requests (posts, authentication, email verification)
+---
 
--   Deployed on **Vercel** (or any preferred hosting platform)
+## Setup & Local development
+### Prerequisites
+- Node.js 18+
+- Running instance of Blog API
 
-* * * * *
+### Installation
+```
+git clone https://github.com/rabebe/blog-frontend.git
+cd blog-frontend
+npm install
+```
 
-**Project Structure**
----------------------
+### Environment Variables
+Create .env.local:
+```
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
 
+### Run locally
+```
+npm run dev
+```
+Access at http://localhost:3000
 
-**Key pages/components:**
+---
 
-
-
-* * * * *
-
-**Setup Instructions**
-----------------------
-
-1.  **Clone the repository:**
-
-`git clone https://github.com/rabebe/blog-frontend.git cd blog-frontend `
-
-1.  **Install dependencies:**
-
-`npm install `
-
-1.  **Create a `.env.local` file** in the project root with the following variable:
-`NEXT_PUBLIC_API_URL: URL of your Blog Backend API (e.g., http://localhost:5000 for local testing)
-
-1.  **Start the development server:**
-
-    `npm run dev `
-
-The app will be available at `http://localhost:3000`.
-
-* * * * *
-
-**Email Verification Flow**
----------------------------
-
-1.  User registers on the frontend.
-
-2.  Backend generates a verification token and sends an email.
-
-3.  The email link points to `/verify-email?token=<token>` on the frontend.
-
-4.  Frontend extracts the token and calls the backend verification endpoint using **Fetch**.
-
-5.  Verification success or failure is displayed to the user.
-
-* * * * *
-
-**Available Scripts**
----------------------
+## Available Scripts
 
 | Script | Description |
 | --- | --- |
@@ -101,32 +118,13 @@ The app will be available at `http://localhost:3000`.
 | `npm run lint` | Runs ESLint to check code quality |
 | `npm run format` | Runs Prettier to format code |
 
-* * * * *
+---
 
-**Deployment**
---------------
+## Deployment
+- Deploy to Vercel or preferred hosting
+- Set environment variables in hosting platform
 
--   **Build the app for production:**
+---
 
-    `npm run build `
-
--   Deploy the `.next` build folder to **Vercel**, **Netlify**, or your preferred hosting platform.
-
--   Make sure `.env` variables are set in your hosting environment.
-
-* * * * *
-
-**Contributing**
-----------------
-
-1.  Fork the repository
-
-2.  Create a branch for your feature (`git checkout -b feature/your-feature`)
-
-3.  Make your changes
-
-4.  Commit your changes (`git commit -m "Add feature"`)
-
-5.  Push your branch (`git push origin feature/your-feature`)
-
-6.  Open a Pull Request
+## Related Repositories
+- Blog API (Backend): https://github.com/rabebe/blog-api
