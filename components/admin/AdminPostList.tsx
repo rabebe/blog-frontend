@@ -15,7 +15,7 @@ export default function AdminPostList() {
   const [posts, setPosts] = useState<Post[]>([])
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   
-  // 🔥 Safeguard State: Stores the ID of the post currently being "confirmed"
+  // Safeguard State: Stores the ID of the post currently being "confirmed"
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   
   const router = useRouter()
@@ -73,7 +73,7 @@ export default function AdminPostList() {
         />
       )}
 
-      {/* 🔥 Empty State Logic */}
+      {/* Empty State Logic */}
       {posts.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl">
           <p className="text-gray-500">No posts found. Time to write something great!</p>
@@ -94,7 +94,7 @@ export default function AdminPostList() {
                   Edit
                 </button>
                 
-                {/* 🔥 Safeguard Delete Button UI */}
+                {/* Safeguard Delete Button UI */}
                 <button
                   onClick={() => deletePost(post.id)}
                   className={`px-3 py-1 text-sm rounded border transition-all ${

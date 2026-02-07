@@ -21,7 +21,7 @@ export default function CommentList({ postId }: CommentListProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
 
-  // ✅ Read admin status from localStorage
+  // Read admin status from localStorage
   const isAdmin =
     typeof window !== "undefined" &&
     JSON.parse(localStorage.getItem("user") || "{}")?.role === "admin"
@@ -94,7 +94,7 @@ export default function CommentList({ postId }: CommentListProps) {
                     </span>
                   </div>
 
-                  {/* ✅ ADMIN DELETE BUTTON */}
+                  {/* ADMIN DELETE BUTTON */}
                   {isAdmin && (
                     <button
                       onClick={() => handleDelete(comment.id)}
